@@ -1,6 +1,3 @@
-This reposity mainly talked about classical GANs which focus on stabilizing training process and generating high quality images.  
-*********************
-
 All have been tested with python2.7+ and tensorflow1.0+ in linux.  
 
 * Samples: save generated data, each folder contains a figure to show the results.  
@@ -9,24 +6,24 @@ All have been tested with python2.7+ and tensorflow1.0+ in linux.
 	* nets.py: Generator and Discriminator are saved here.   
 
 
-For research purpose, 
+For research purpose,   
 **Network architecture**: all GANs used the same network architecture(the Discriminator of EBGAN and BEGAN are the combination of traditional D and G)  
-**Learning rate**: all initialized by 1e-4 and decayed by a factor of 2 each 5000 epoches (Maybe it is unfair for some GANs, but the influences are small so I ignored)  
+**Learning rate**: all initialized by 1e-4 and decayed by a factor of 2 each 5000 epoches (Maybe it is unfair for some GANs, but the influences are small, so I ignored)  
 **Dataset**: celebA cropped with 128 and resized to 64, users should copy all celebA images to `./Datas/celebA` for training  
 
-- [x] DCGAN
-- [x] EBGAN
-- [x] WGAN
-- [x] BEGAN
+- [x] DCGAN  
+- [x] EBGAN  
+- [x] WGAN  
+- [x] BEGAN  
 And for comparsion, I added VAE here.  
-- [x] VAE
+- [x] VAE  
 
 The generated results are shown in the end of this page.   
 
  ***************
  
  
-# Generative Models
+# Theories
  
 :sparkles:DCGAN  
 --------
@@ -58,7 +55,8 @@ What is energy function?
 ![EBGAN_structure](https://raw.githubusercontent.com/YadiraF/Images/master/GAN/Energy_based_model.png)   
 The figure is from [LeCun, Yann, et al. "A tutorial on energy-based learning." ](http://yann.lecun.com/exdb/publis/pdf/lecun-06.pdf)  
 
-In EBGAN, we want the Discriminator to distinguish the real images and the generated(fake) images. How? A simple idea is to set X as the real image and Y as the reconstructed image, and then minimize the energy of X and Y. So we need a auto-encoder to get Y from X, and a measure to calcuate the energy (here are MSE, so simple). Finally we get the structure of Discriminator as shown below.  
+In EBGAN, we want the Discriminator to distinguish the real images and the generated(fake) images. How? A simple idea is to set X as the real image and Y as the reconstructed image, and then minimize the energy of X and Y. So we need a auto-encoder to get Y from X, and a measure to calcuate the energy (here are MSE, so simple).   
+Finally we get the structure of Discriminator as shown below.  
 
 ![EBGAN_structure](https://raw.githubusercontent.com/YadiraF/Images/master/GAN/EBGAN_structure.png)    
 
@@ -88,8 +86,8 @@ Use EM distance or Wasserstein-1 distance, so GAN can solve the two problems abo
 **Mathmatics Analysis**  
 Why JS divergence has problems? pleas see [Towards Principled Methods for Training Generative Adversarial Networks](https://arxiv.org/pdf/1701.04862.pdf)  
 
-Anyway, this highlights the fact that the KL, JS, and TV distances are not sensible
-cost functions when learning distributions supported by low dimensional manifolds.   
+Anyway, this highlights the fact that **the KL, JS, and TV distances are not sensible
+cost functions** when learning distributions supported by low dimensional manifolds.   
 
 so the author use Wasserstein distance  
 ![WGAN_loss](https://raw.githubusercontent.com/YadiraF/Images/master/GAN/WGAN_loss1.png)  
@@ -125,7 +123,7 @@ However,  it is difficult to directly calculate the original formula, ||f||_L<=1
 We have already introduced the structure of EBGAN, which is also used in BEGAN.   
 Then, instead of calculating the Wasserstein distance of the samples distribution in WGAN, BEGAN calculates the wasserstein distance of loss distribution.   
 (The mathematical analysis in BEGAN I think is more clear and intuitive than in WGAN)  
-So, simply replace the E of L, we get the loss function:
+So, simply replace the E of L, we get the loss function:  
  ![BEGAN_loss](https://raw.githubusercontent.com/YadiraF/Images/master/GAN/BEGAN_loss1.png)  
 
 Then, the most intereting part is comming:  
@@ -133,24 +131,23 @@ a new hyper-paramer  to control the trade-off between image diversity and visual
  ![BEGAN_loss](https://raw.githubusercontent.com/YadiraF/Images/master/GAN/BEGAN_loss2.png)  
 Lower values of γ lead to lower image diversity because the discriminator focuses more heavily on auto-encoding real images.  
 
-The final loss function is:
+The final loss function is:  
 **Loss Function**  
  ![BEGAN_loss](https://raw.githubusercontent.com/YadiraF/Images/master/GAN/BEGAN_loss3.png)  
  
  The intuition behind the function is easy to understand:  
  (Here I describe my understanding roughly...)   
 (1). In the beginning, the G and D are initialized randomly and k_0 = 0, so the L_real is larger than L_fake, leading to a short increase of k.   
-(2). After several iterations, the D easily learned how to reconstruct the real data, so gamma*L_real - L_fake is negative, k decreased to 0, now D is only to reconstruct the real data and G is to learn real data distrubition so as to minimize the reconstruction error in D.   
-(3). Along with the improvement of the ability of G to generate images like real data, L_fake becomes smaller and k becomes larger, so D focuses more on discriminating the real and fake data, then G trained more following. 
-(4). In the end, k becomes a constant, which means  gamma*L_real - L_fake=0, so the optimization is done.  
+(2). After several iterations, the D easily learned how to reconstruct the real data, so gamma x L_real - L_fake is negative, k decreased to 0, now D is only to reconstruct the real data and G is to learn real data distrubition so as to minimize the reconstruction error in D.   
+(3). Along with the improvement of the ability of G to generate images like real data, L_fake becomes smaller and k becomes larger, so D focuses more on discriminating the real and fake data, then G trained more following.   
+(4). In the end, k becomes a constant, which means  gamma x L_real - L_fake=0, so the optimization is done.  
 
  
- 
- And the global loss is defined the addition of L_real (how well D learns the distribution of real data) and |gamma*L_real - L_fake| (how closed of the generated data from G and the real data) 
+ And the global loss is defined the addition of L_real (how well D learns the distribution of real data) and |gamma*L_real - L_fake| (how closed of the generated data from G and the real data)   
   ![BEGAN_loss](https://raw.githubusercontent.com/YadiraF/Images/master/GAN/BEGAN_loss4.png)  
 
 
-I set gamma=0.75, learning rate of k = 0.001, the learning curve of loss and k is shown below. 
+I set gamma=0.75, learning rate of k = 0.001, then the learning curve of loss and k is shown below.   
   ![BEGAN_loss](https://raw.githubusercontent.com/YadiraF/Images/master/GAN/BEGAN_curve.png)  
 
 
@@ -158,18 +155,23 @@ I set gamma=0.75, learning rate of k = 0.001, the learning curve of loss and k i
 # Results
 
 DCGAN  
-![DCGAN_samples](https://raw.githubusercontent.com/YadiraF/GAN_Theories/master/Samples/dcgan/497.png)
+![DCGAN_samples](https://raw.githubusercontent.com/YadiraF/GAN_Theories/master/Samples/dcgan/497.png)  
+
 EBGAN (not trained enough)  
-![EBGAN_samples](https://raw.githubusercontent.com/YadiraF/GAN_Theories/master/Samples/ebgan/109_r.png)
+![EBGAN_samples](https://raw.githubusercontent.com/YadiraF/GAN_Theories/master/Samples/ebgan/109_r.png)  
+
 WGAN (not trained enough)  
-![WGAN_samples](https://raw.githubusercontent.com/YadiraF/GAN_Theories/master/Samples/wgan/260.png)
+![WGAN_samples](https://raw.githubusercontent.com/YadiraF/GAN_Theories/master/Samples/wgan/260.png)  
+
 BEGAN: gamma=0.75 learning rate of k=0.001  
-![BEGAN_samples](https://raw.githubusercontent.com/YadiraF/GAN_Theories/master/Samples/began_n/369_r.png)
+![BEGAN_samples](https://raw.githubusercontent.com/YadiraF/GAN_Theories/master/Samples/began_n/369_r.png)  
+
 BEGAN: gamma= 0.5 learning rate of k = 0.002  
-![BEGAN_samples](https://raw.githubusercontent.com/YadiraF/GAN_Theories/master/Samples/began/228_r.png)
+![BEGAN_samples](https://raw.githubusercontent.com/YadiraF/GAN_Theories/master/Samples/began/228_r.png)  
 
 VAE  
-![BEGAN_samples](https://raw.githubusercontent.com/YadiraF/GAN_Theories/master/Samples/vae/499_s.png) 
+![BEGAN_samples](https://raw.githubusercontent.com/YadiraF/GAN_Theories/master/Samples/vae/499_s.png)   
+
 
 # References
 http://wiseodd.github.io/techblog/2016/12/10/variational-autoencoder/ (a good blog to introduce VAE)  
